@@ -1,0 +1,177 @@
+\documentclass[utf8]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[parfill]{parskip}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listingsutf8}
+\usepackage{fullpage}
+
+\usepackage{hyperref}
+%\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}  % à déterminer
+
+% -----------------------------------------------------
+
+% Page de garde
+
+\title{Rapport : Projet d'année Slideways}
+\author{Polonski Sébastien 499415}
+\date{Année académique 2019/2020}
+
+\begin{document}
+\maketitle
+
+% Ajout de l'image
+\begin{figure}[H]
+  \centering
+	\includegraphics[scale=0.5]{img/logo.png}
+  \label{fig:logo}
+\end{figure}
+
+% Table des matières
+\newpage
+\tableofcontents
+
+% Introduction
+\newpage
+\section{Introduction}
+
+\qquad Le but de ce projet d'année est l'implémentation en Python 3 du jeu de société "Slideways" dont les règles sont disponibles à 
+\href{https://rnrgames.com/Content/RRGames/files/952.pdf}{cette adresse}. Le jeu est une variante des jeux OXO et Puissance 4.
+
+Le développement est découpé en 4 parties au cours de l'année.
+\begin {itemize}
+\item Partie 1 : Jeu simplifié, affichage en terminal
+\item Partie 2 : Jeu complet + IA basique, affichage en terminal
+\item Partie 3 : Réalisation d’une interface graphique pour le jeu à l’aide de la librairie PyQt.
+\item Partie 4 : Différentes améliorations au choix de l’étudiant(e), créativité encouragée.
+\end{itemize}
+
+\qquad La partie 1 ne contient que le jeu de base, sans IA ou option de décalage et avec un affichage en terminal. Le jeu ressemble donc plus au "OXO" mais avec un plateau différent.
+
+\qquad La partie 2 nous a permis de découvrir le jeu dans son intégralité par l'ajout de l'option de décalage et l'implémentation d'une intelligence artificielle qui se base sur l'algorithme "minimax".
+
+\qquad La partie 3 a surtout eu pour objectif de se focaliser sur la transposition de l'affichage en terminal par l'affichage avec une fenêtre grâce aux modules de PyQt5.
+
+\qquad Le rapport se focalisera donc surtout sur la dernière partie à savoir la partie 4. Cette-dernière contient des fonctionnalités obligatoires et certaines facultatives visant notamment à améliorer
+l'intelligence artificielle que ce soit au niveau du temps où de l'exactitude des coups joués.
+
+% Méthodes et exemples
+\newpage
+\section {Méthodes obligatoires et exemples}
+
+% Règle 1:
+\subsection {Modification des règles de jeu}
+
+\qquad Une des règles à ajouter est la suivante : "Lors d’une même partie, on ne pourra pas rencontrer deux fois exactement le même plateau de jeu".
+Pour cela nous allons utiliser le code suivant afin de récupérer l'information d'un plateau sous forme de chaine de caractère.
+
+% code python
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering
+	\lstinputlisting{./code/code1a.py}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+\qquad En effet, le stockage de l'information prend ainsi moins de place en mémoire que la copie du plateau et de la liste de décalages en entier. Cette fonction sera utilisé dans la méthode
+"get valid actions" dans laquelle on testera chaque coup supposé valide, transformer le plateau après coup en chaine de caractères et voir à l'aide de la fonction ci-dessus si la chaine de catactère est déja présente dans l'ensemble des plateaux joués. Si le plateau a déja été joué, le coup est retiré des coups valides et dans tous les cas l'action sur le plateau est annulée.
+
+% Règle 2:
+\subsection{Sauvegarde et rediffusion d'une partie}
+\subsubsection {Sauvegarde d'une partie}
+
+\qquad Tout d'abord pour la sauvegarde d'une partie, j'ai décidé de faire celle-ci lorsque la case "Save game" est cochée et que la partie se termine avec un ou deux gagant(s). 
+Cela évite ainsi quelconque ambiguïté quant à la fin de la rediffusion et permet au joueur de savoir clairement quand il joue et quand il s'agit d'une rediffusion.
+La sauvegarde crée donc un  fichier format *.sldws pour que celui-ci soit plus facilement détectable lors de la rediffusion.
+Celui-ci est structuré de cette manière: "4A,+0,4B,+2".
+
+% Ajout de l'image
+\begin{figure}[H]
+  \centering
+	\includegraphics[scale=0.3]{img/dialog.jpg}
+	\caption{Recherche de fichier avec QfileDialog}
+  \label{fig:logo}
+\end{figure}
+
+
+\subsubsection{Rediffusion d'une partie}
+\qquad En ce qui concerne la rediffusion d'une partie, le fichier est ensuite lu grâce à la fonction "get file content" appelée par "replay game"  lorsque l'utilisateur appuie sur le bouton "Search file" et sélectionne un fichier format *.sldws, sinon rien ne se passe. La fonction replay game parcours ensuite le fichier si celui-ci est valide et joue les coups qui y figurent en annonçant 
+le(s) gagant(s) à la fin. Bien entendu, pour éviter d'interrompre une partie déjà en cours, un paramètre "game is playing" est ajouté à la classe "App" afin de savoir si une partie est déja en cours.
+La rediffusion est donc possible seulement si personne ne joue déjà.
+
+% code python
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering
+	\lstinputlisting{./code/filecontent.py}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+
+% Règle 3:
+\subsection{Minuterie}
+
+\qquad Enfin, la dernière fonctionnalité obligatoire à implémenter est la suivante :
+"Si une IA ne retourne pas un coup dans le temps imparti, elle perd la partie. Il est évident que cette limitation ne s’applique pas à un joueur humain".\newline
+\qquad Pour cela il nous suffit de mesurer le temps avant calcul du coup et le soustraire au temps après calcul du coup et voir si le résultat est inférieur à une seconde. 
+Si tel est le cas, la partie s'arrête.
+
+% code python
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering
+	\lstinputlisting{./code/minuterie.py}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+
+% IA
+\section {Améliorations facultatives de l’IA}
+\subsection{Élagage Alpha-Beta}
+
+\qquad Pour ce qu'il s'agir de l'amélioration de l'IA, la base pour la fonction minimax était fournie dans la partie 3. Celle-ci contenait déja des modifications, notamment l'ajout de pénaliités en fonction de la profondeur de la recherche des meilleurs coups possibles. Ici, il s'agir juste de comparer les valeurs actuelles et la valeur d'alpha et beta et de ne pas continuer dans les branches qui ne respectent pas les conditions. Cela améliore donc la rapidité de la fonction.
+
+% code python
+\begin{figure}[H]
+\begin{minipage}{\textwidth}
+  \centering
+	\lstinputlisting{./code/minimax.py}
+  \label{fig:code_exemple}
+\end{minipage}
+\end{figure}
+
+%----------------------------------------------------------
+
+%Conclusion
+\newpage
+\section{Conclusion}
+
+\qquad Pour finir, ce projet d'année à permis de parcourir différents outils, méthodes et niveaux de difficultés aux cours de l'année.
+En effet, lors de la partie 1, la demande d'implémentation était relativement basique mais totalement adaptée à notre expérience de débutant(manipulation de matrice, création de fonctions). Beaucoup d'aide était fournie que ce soit au niveau des tests ou des différentes fonctions à implémenter.
+
+\qquad En ce qui concerne la partie 2, il en va presque de même mise à part une réfléxion plus poussée afin de permettre la fonctionnalité de décalage et de déja s'intéresser à une IA qui utilise
+un algorithme récursif avec lequel nous n'avions pas encore beaucoup d'expérience(récursivité). Là aussi, peu à peu, de moins en moins d'aide était fournie. Il suffit de prendre comme exemple l'implémentation du décalage dont la réalisation était laisée à notre esprit logique.
+
+\qquad Voici arrivée le temps de la partie 3, où le plus grand défi à relever était d'apprendre par soi-même les concepts d'interface graphique et d'apprentissage d'une libraire annexe. 
+Là aussi, de moins en moins de guidance quand aux choix des fonctions à utiliser. L'autonomie de la réalisation était réelle.
+
+\qquad C'est donc naturellement que viens s'annexer la partie finale de ce projet. Où il est libre de choisir ou non certaines fonctionnalités, voire même d'en ajouter si on en a envie( et qu'elles sont approuvées). Cette dernière partie, dont la remise se situe aux alentours de la fin de l'année reprends aussi les concepts des cours d'algorithmiques et donc permet d'en faire le lien.
+
+\qquad Je pense donc que ce projet d'année était bien répartit en difficulté au cours des quadrimestres et nous a permis en tant que débutants et étudiants en première année d'informatique de toucher un peu à tout : manipulation de matrices, algorithme et IA, interface graphique et rédaction de rapport en LaTeX.
+
+
+
+
+
+
+
+\end {document}
